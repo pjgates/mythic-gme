@@ -30,6 +30,8 @@ const settings = new PackSettings(adapter, controller, { changed: () => render()
 const run = createAgentRun(controller);
 const mythic = createMythicApi(controller, run);
 hostWindow.MythicGME = mythic.api;
+// Extensions with a lower loading order finish booting before this one; the event tells them the API exists now.
+window.dispatchEvent(new CustomEvent('mythic-gme-ready', { detail: { version: mythic.api.version } }));
 registerMythicTools(adapter, run);
 const filePicker = adapter.filePicker;
 const composer = adapter.composer;
