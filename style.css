@@ -1,0 +1,242 @@
+/* Mythic GME surfaces inherit the host palette and never restyle host chat elements. */
+:is(#mythic-gme-drawer, #mythic-gme-launch) {
+  --mg-accent: var(--customThemeColor, #5fa8f0);
+  --mg-panel: var(--SmartThemeBlurTintColor, #0f141c);
+  --mg-text: var(--SmartThemeBodyColor, #d6dce6);
+  --mg-border: var(--SmartThemeBorderColor, #637083);
+  --mg-muted: color-mix(in srgb, var(--mg-text) 74%, var(--mg-panel));
+  --mg-rule: color-mix(in srgb, var(--mg-text) 16%, var(--mg-panel));
+  --mg-raised: color-mix(in srgb, var(--mg-text) 6%, var(--mg-panel));
+  --mg-pressed: color-mix(in srgb, var(--mg-text) 14%, var(--mg-panel));
+  --mg-control-border: color-mix(in srgb, var(--mg-text) 55%, var(--mg-panel));
+  --mg-selection: color-mix(in srgb, var(--mg-accent) 35%, var(--mg-panel));
+  --mg-ease: cubic-bezier(.2, .8, .2, 1);
+  color: var(--mg-text); background: var(--mg-panel);
+  font: 16px/1.45 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+  caret-color: var(--mg-accent);
+  accent-color: var(--mg-accent);
+  scrollbar-color: var(--mg-control-border) transparent;
+  scrollbar-width: thin;
+}
+/* Explicit, not inherited: a <details> slots its content through a UA shadow slot that resets inherit to content-box. */
+#mythic-gme-drawer *, #mythic-gme-drawer *::before, #mythic-gme-drawer *::after { box-sizing: border-box; }
+#mythic-gme-drawer ::selection { background: var(--mg-selection); color: var(--mg-text); }
+#mythic-gme-drawer[hidden], #mythic-gme-drawer [hidden] { display: none !important; }
+.mythic-gme-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Every control is a 44px touch target; nothing depends on hover. */
+#mythic-gme-drawer button, #mythic-gme-launch {
+  color: var(--mg-text); background: var(--mg-raised); font: inherit; line-height: 1.2;
+  border: 1px solid var(--mg-control-border); border-radius: 8px;
+  min-width: 44px; min-height: 44px; padding: 8px 12px; cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 150ms var(--mg-ease), border-color 150ms var(--mg-ease), transform 150ms var(--mg-ease);
+}
+#mythic-gme-drawer button:active:not(:disabled), #mythic-gme-launch:active { background: var(--mg-pressed); transform: translateY(1px); }
+#mythic-gme-drawer button:disabled { cursor: default; color: var(--mg-muted); border-color: var(--mg-rule); background: transparent; }
+#mythic-gme-drawer :focus-visible, #mythic-gme-launch:focus-visible { outline: 2px solid var(--mg-accent); outline-offset: 2px; }
+/* Every text field (ask, notes, expected scene, list add, pack JSON) is one 44px host text_pole. */
+#mythic-gme-drawer .text_pole {
+  flex: 1 1 160px; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 10px 12px; font: inherit; line-height: 1.4;
+  color: var(--mg-text); background: var(--mg-raised); border: 1px solid var(--mg-control-border); border-radius: 8px;
+  transition: border-color 150ms var(--mg-ease);
+}
+#mythic-gme-drawer .text_pole::placeholder { color: var(--mg-muted); opacity: 1; }
+#mythic-gme-drawer .text_pole:focus-visible { border-color: var(--mg-accent); outline-offset: 0; }
+#mythic-gme-drawer textarea.text_pole { resize: vertical; }
+/* Verb chips: one pill grammar for everything the player taps to act on the field or a receipt. */
+#mythic-gme-drawer .mythic-gme-chip { border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
+#mythic-gme-drawer .mythic-gme-chip[aria-expanded="true"], #mythic-gme-drawer [aria-pressed="true"] {
+  border-color: var(--mg-accent); color: var(--mg-accent); background: color-mix(in srgb, var(--mg-accent) 12%, var(--mg-panel));
+}
+
+/* The drawer: header, scrolling body, Ask bar, as three grid rows so the ends stay put while the scene scrolls. */
+#mythic-gme-drawer {
+  position: fixed; z-index: 3000; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid var(--mg-border); overscroll-behavior: contain;
+  box-shadow: 0 12px 32px -12px color-mix(in srgb, #000 55%, transparent);
+  transition: opacity 200ms var(--mg-ease), transform 200ms var(--mg-ease);
+}
+@starting-style { #mythic-gme-drawer { opacity: 0; transform: translateY(12px); } }
+/* Narrow viewports: a bottom sheet that leaves room for the software keyboard (dvh follows it). */
+@media (max-width: 1023px) {
+  #mythic-gme-drawer { left: 0; right: 0; bottom: 0; max-height: min(62dvh, 100dvh - 48px); border-radius: 14px 14px 0 0; border-bottom: 0; }
+}
+/* Wide viewports: a docked side panel. */
+@media (min-width: 1024px) {
+  #mythic-gme-drawer { top: 0; right: 0; bottom: 0; width: 360px; max-width: 40vw; border-right: 0; }
+  @starting-style { #mythic-gme-drawer { transform: translateX(12px); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mythic-gme-drawer, #mythic-gme-drawer * { transition: none !important; }
+}
+
+.mythic-gme-top {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid var(--mg-rule);
+}
+.mythic-gme-chaos { display: grid; grid-template-columns: 44px auto 44px; align-items: center; gap: 2px; }
+.mythic-gme-chaos button { font-size: 1.25em; line-height: 1; padding: 8px; }
+.mythic-gme-readout { display: flex; align-items: baseline; gap: 6px; padding: 0 6px; min-height: 44px; }
+.mythic-gme-readout [data-chaos] { font-size: 1.75em; font-weight: 600; line-height: 1; color: var(--mg-accent); min-width: 1ch; text-align: center; }
+.mythic-gme-readout span { font-size: .875em; color: var(--mg-muted); }
+.mythic-gme-title { margin: 0; font-size: 1em; font-weight: 600; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mythic-gme-close { padding-inline: 12px; }
+
+.mythic-gme-body { overflow: auto; overscroll-behavior: contain; padding: 0 12px 8px; }
+.mythic-gme-notice { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--mg-raised); font-size: .9375em; }
+/* Status lives at the top of the Ask bar: refusals and an unavailable chat, never routine save chatter. */
+.mythic-gme-status { margin: 0; font-size: .875em; overflow-wrap: anywhere; }
+.mythic-gme-status:empty { display: none; }
+
+/* Scene strip: the expected scene the player wrote, how the check came out, and the three scene buttons. */
+.mythic-gme-scene { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--mg-rule); }
+.mythic-gme-expected { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mythic-gme-expected-text { margin: 0; font-style: italic; flex: 1 1 auto; overflow-wrap: anywhere; }
+.mythic-gme-expected-form, .mythic-gme-note-form { display: grid; gap: 8px; }
+.mythic-gme-note-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.mythic-gme-scene-status { margin: 0; font-size: .9375em; color: var(--mg-muted); }
+.mythic-gme-scene-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.mythic-gme-scene-check { border-color: var(--mg-accent); font-weight: 600; white-space: nowrap; }
+.mythic-gme-scene-end-label { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mythic-gme-scene-row [data-end-scene] { padding-inline: 4px; font-size: .9375em; line-height: 1.15; text-wrap: balance; }
+/* The two verdicts read as one segmented End scene control. */
+.mythic-gme-scene-row [data-end-scene="in"] { border-radius: 8px 0 0 8px; }
+.mythic-gme-scene-row [data-end-scene="out"] { border-radius: 0 8px 8px 0; margin-left: -9px; }
+
+/* Feed: this scene's receipts newest first, separated by hairlines, each followed by its note and its verbs. */
+.mythic-gme-feed { display: grid; }
+.mythic-gme-feed-empty { margin: 0; padding: 20px 0; color: var(--mg-muted); text-align: center; }
+.mythic-gme-entry { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--mg-rule); }
+.mythic-gme-note { margin: 0; padding-left: 12px; border-left: 1px solid var(--mg-control-border); font-style: italic; overflow-wrap: anywhere; }
+.mythic-gme-entry-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The feed is one scene in order; the roll log keeps the clock. */
+.mythic-gme-entry time { display: none; }
+
+/* Receipt cards render from saved receipts; the layout is shared, each kind fills the body. */
+.mythic-gme-card { display: grid; gap: 4px; min-width: 0; }
+.mythic-gme-card p { margin: 0; }
+.mythic-gme-card-header, .mythic-gme-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.mythic-gme-card-title { font-weight: 600; }
+.mythic-gme-card time { margin-left: auto; color: var(--mg-muted); font-size: .8125em; }
+.mythic-gme-card-summary { color: var(--mg-text); overflow-wrap: anywhere; }
+.mythic-gme-fate-outcome, .mythic-gme-scene-outcome { font-size: 1.375em; line-height: 1.1; color: var(--mg-accent); }
+.mythic-gme-fate-card[data-outcome="exceptional-yes"] .mythic-gme-fate-outcome,
+.mythic-gme-fate-card[data-outcome="exceptional-no"] .mythic-gme-fate-outcome { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.mythic-gme-fate-draw, .mythic-gme-scene-draw { color: var(--mg-muted); }
+.mythic-gme-badge { padding: 2px 10px; border-radius: 999px; font-size: .8125em; font-weight: 600; color: var(--mg-panel); background: var(--mg-accent); align-self: center; }
+.mythic-gme-badge-muted { color: var(--mg-text); background: transparent; border: 1px solid var(--mg-control-border); font-weight: 400; }
+.mythic-gme-fate-question, .mythic-gme-question { font-style: italic; overflow-wrap: anywhere; }
+.mythic-gme-fate-meta, .mythic-gme-fate-thresholds, .mythic-gme-scene-meta, .mythic-gme-card .mythic-gme-meta, .mythic-gme-card-dice { font-size: .875em; color: var(--mg-muted); }
+/* Random Event chain: stacked blocks under the Fate or Scene lines; long names and words wrap, never scroll. */
+.mythic-gme-event { display: grid; gap: 4px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--mg-rule); min-width: 0; }
+.mythic-gme-event p { overflow-wrap: anywhere; }
+.mythic-gme-event-focus { font-weight: 600; }
+.mythic-gme-event-selection { font-size: .9375em; }
+.mythic-gme-event-words, .mythic-gme-card .mythic-gme-words { font-size: 1.375em; line-height: 1.1; font-weight: 600; color: var(--mg-accent); overflow-wrap: anywhere; }
+.mythic-gme-event-meta { font-size: .875em; color: var(--mg-muted); }
+.mythic-gme-event-again { justify-self: start; margin-top: 4px; }
+.mythic-gme-scene-adjustments { margin: 0; padding-left: 1.25em; display: grid; gap: 2px; }
+.mythic-gme-scene-adjustment { font-weight: 600; overflow-wrap: anywhere; }
+.mythic-gme-dice-faces { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.mythic-gme-die {
+  display: inline-grid; place-items: center; min-width: 36px; min-height: 36px; padding: 0 6px;
+  border: 1px solid var(--mg-control-border); border-radius: 8px; font-weight: 600;
+}
+.mythic-gme-die.is-kept { color: var(--mg-accent); border-color: var(--mg-accent); }
+.mythic-gme-die.is-dropped { color: var(--mg-muted); text-decoration: line-through; }
+.mythic-gme-dice-total { display: flex; align-items: baseline; gap: 4px; }
+.mythic-gme-dice-total [data-total] { font-size: 1.375em; line-height: 1.1; color: var(--mg-accent); }
+.mythic-gme-card-target { margin: 4px 0 0; font-size: 1.375em; line-height: 1.1; font-weight: 600; color: var(--mg-accent); }
+
+/* Bookkeeping rows (Adventure Lists, Roll log, AI prompt, Settings): collapsed 44px summaries under hairlines. */
+.mythic-gme-panel { border: 0; border-bottom: 1px solid var(--mg-rule); border-radius: 0; padding: 0; }
+.mythic-gme-panel > summary {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 0; cursor: pointer; list-style: none;
+  font-weight: 600;
+}
+.mythic-gme-panel > summary::-webkit-details-marker { display: none; }
+.mythic-gme-panel > summary::after {
+  content: ''; margin-left: auto; width: 8px; height: 8px; flex: 0 0 auto;
+  border-right: 2px solid var(--mg-muted); border-bottom: 2px solid var(--mg-muted);
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform 150ms var(--mg-ease);
+}
+.mythic-gme-panel[open] > summary::after { transform: rotate(225deg) translate(-2px, -2px); }
+.mythic-gme-panel > summary > :not(.mythic-gme-fold-title, .mythic-gme-list-title, .mythic-gme-log-title, .mythic-gme-settings-title) { font-weight: 400; color: var(--mg-muted); font-size: .9375em; }
+.mythic-gme-panel > :not(summary) { margin-bottom: 12px; }
+.mythic-gme-panel > :not(summary):last-child { margin-bottom: 16px; }
+
+/* Adventure Lists: one block per list; every control is a 44px target and the layout wraps at phone width. */
+.mythic-gme-lists { display: flex; flex-direction: column; }
+.mythic-gme-lists .mythic-gme-panel { border-bottom: 0; }
+.mythic-gme-lists .mythic-gme-panel > summary { padding-left: 12px; }
+.mythic-gme-list-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.mythic-gme-list-entries:empty { display: none; }
+.mythic-gme-list-entry {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 8px;
+  padding: 8px 0; border-top: 1px solid var(--mg-rule);
+}
+.mythic-gme-list-name { overflow-wrap: anywhere; min-height: 44px; display: flex; align-items: center; }
+.mythic-gme-list-weight { color: var(--mg-accent); font-weight: 600; }
+.mythic-gme-list-controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.mythic-gme-list-rename, .mythic-gme-list-add { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.mythic-gme-list-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mythic-gme-list-actions [data-roll] { flex: 1 1 auto; }
+.mythic-gme-list-card:empty { display: none; }
+
+/* Roll log: the whole chat's receipts; entries scroll inside their own bounded region. */
+.mythic-gme-log-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mythic-gme-log-entries { display: flex; flex-direction: column; max-height: min(40dvh, 360px); overflow: auto; overscroll-behavior: contain; }
+.mythic-gme-log-entries:empty { display: none; }
+.mythic-gme-log-entry { border-top: 1px solid var(--mg-rule); }
+.mythic-gme-log-entry > summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-height: 44px; padding: 8px 0;
+  cursor: pointer; list-style-position: inside;
+}
+.mythic-gme-log-kind { font-weight: 600; }
+.mythic-gme-log-text { flex: 1 1 160px; overflow-wrap: anywhere; font-size: .9375em; }
+.mythic-gme-log-entry time { margin-left: auto; color: var(--mg-muted); font-size: .8125em; }
+.mythic-gme-log-card { padding: 0 0 12px 12px; }
+.mythic-gme-log-card:empty { display: none; }
+
+/* AI prompt: the toggle row is a 44px target; the reason line only shows when the host lacks prompt injection. */
+.mythic-gme-prompt { display: grid; gap: 8px; }
+.mythic-gme-prompt h3 { margin: 0; font-size: 1em; }
+.mythic-gme-panel .mythic-gme-prompt h3 { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mythic-gme-prompt-toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.mythic-gme-prompt-toggle input { width: 24px; height: 24px; margin: 0; flex: 0 0 auto; }
+.mythic-gme-prompt-toggle input:disabled + span { color: var(--mg-muted); }
+.mythic-gme-prompt-reason, .mythic-gme-prompt-preview { margin: 0; font-size: .9375em; color: var(--mg-muted); }
+.mythic-gme-prompt-reason { color: var(--mg-accent); }
+.mythic-gme-acknowledge { justify-self: start; }
+
+/* Settings: the active pack, pack import, and the Fate Check Chaos override. */
+.mythic-gme-pack { margin: 0; font-size: .9375em; color: var(--mg-muted); }
+.mythic-gme-pack-import, .mythic-gme-field { display: grid; gap: 6px; }
+.mythic-gme-settings textarea.text_pole { min-height: 88px; font-family: ui-monospace, monospace; font-size: .9375em; }
+.mythic-gme-settings-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.mythic-gme-settings-buttons button { flex: 1 1 auto; }
+.mythic-gme-settings-status { margin: 0; font-size: .9375em; color: var(--mg-muted); }
+.mythic-gme-settings-status:empty { display: none; }
+.mythic-gme-settings-error { color: var(--mg-accent); }
+.mythic-gme-override input { max-width: 200px; }
+
+/* Ask bar: one field, its verbs as chips in a row that scrolls sideways; pinned to the drawer's bottom edge. */
+.mythic-gme-ask {
+  display: grid; gap: 8px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--mg-rule); background: var(--mg-panel);
+}
+.mythic-gme-ask-form { display: flex; gap: 8px; align-items: stretch; }
+.mythic-gme-roll { border-color: var(--mg-accent); font-weight: 600; }
+.mythic-gme-ask-hint { margin: 0; font-size: .875em; color: var(--mg-muted); }
+.mythic-gme-chips {
+  display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+  padding: 2px 0 4px; margin: -2px 0 -4px; scrollbar-width: none;
+}
+@media (hover: hover) { .mythic-gme-chips { scrollbar-width: thin; padding-bottom: 8px; } }
+.mythic-gme-chip-group { display: flex; gap: 8px; flex: 0 0 auto; }
+.mythic-gme-chip-group:not(:last-child) { padding-right: 8px; border-right: 1px solid var(--mg-rule); }
+.mythic-gme-chips .mythic-gme-chip { flex: 0 0 auto; scroll-snap-align: start; }
+.mythic-gme-chips [data-odds="fifty-fifty"] { border-color: var(--mg-accent); }
