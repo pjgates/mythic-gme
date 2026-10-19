@@ -97,10 +97,21 @@ function attempt(body) {
         return undefined;
     });
 }
-async function reopen() {
+/** A host that cannot name its chat right now is "no saved chat", never a failed extension load. */
+async function currentBinding() {
     const identity = adapter.chatIdentity;
-    const binding = identity.available ? await identity.current() : undefined;
-    await controller.open(binding ?? '');
+    if (!identity.available)
+        return '';
+    try {
+        return (await identity.current()) ?? '';
+    }
+    catch (error) {
+        console.warn(`Mythic GME: chat identity unavailable for now: ${errorMessage(error)}`);
+        return '';
+    }
+}
+async function reopen() {
+    await controller.open(await currentBinding());
 }
 drawer.mount();
 render();

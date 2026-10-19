@@ -22,12 +22,20 @@ function usableStore(api) {
     const absent = ['tryGetJson', 'setJson'].filter(name => !isFunction(store[name]));
     return absent.length ? `TauriTavern extension store is missing ${absent.join(', ')}.` : store;
 }
-export function tauriTavernBinding(api) {
-    const handle = api.chat?.current?.handle?.();
-    if (!handle)
+export async function tauriTavernBinding(api) {
+    // TauriTavern throws from handle() while no chat is active ("Failed to resolve active character id"), which is the
+    // normal state right after the app starts. That, and an unsaved chat with no stable id yet, both mean "select a
+    // saved chat first" rather than a failure.
+    try {
+        const handle = api.chat?.current?.handle?.();
+        if (!handle)
+            return undefined;
+        const id = await handle.stableId();
+        return id ? `${handle.ref.kind}:${id}` : undefined;
+    }
+    catch {
         return undefined;
-    // An unsaved chat has no stable id yet; treat it as "select a saved chat first".
-    return handle.stableId().then(id => id ? `${handle.ref.kind}:${id}` : undefined);
+    }
 }
 export function extensionStoreStorage(window) {
     const store = usableStore(tauriTavernApi(window));
