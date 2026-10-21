@@ -22,7 +22,8 @@ export function createDrawer(mountPoints, actions) {
     launcher.id = LAUNCHER_ID;
     launcher.className = 'menu_button';
     launcher.type = 'button';
-    launcher.textContent = 'Mythic';
+    launcher.textContent = 'Oracle';
+    launcher.setAttribute('aria-label', 'Oracle (Mythic GME)');
     launcher.setAttribute('aria-controls', DRAWER_ID);
     launcher.setAttribute('aria-expanded', 'false');
     const panel = document.createElement('aside');
