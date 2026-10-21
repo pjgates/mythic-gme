@@ -7,6 +7,7 @@ import { createLogSection } from "./log-section.js";
 import { createPromptSection } from "./prompt-section.js";
 import { createSceneSection } from "./scene-section.js";
 import { createSettingsSection } from "./settings-section.js";
+import { createExtensionSettings, mountLauncher } from "./host-layout.js";
 export const LAUNCHER_ID = 'mythic-gme-launch';
 export const DRAWER_ID = 'mythic-gme-drawer';
 const OVERRIDE_ID = 'mythic-gme-chaos-override';
@@ -63,32 +64,48 @@ export function createDrawer(mountPoints, actions) {
     const log = createLogSection(actions);
     const prompt = createPromptSection(actions);
     const settings = createSettingsSection(actions);
+    const extensionSettings = createExtensionSettings('mythic-gme-settings', 'Mythic GME');
     const override = chaosOverrideField();
     settings.element.append(override.field);
     const ask = createAskBar(actions, { chaosOverride: override.value });
     // Reading order: where the scene stands, what just happened, then the bookkeeping rows.
     body.prepend(scene.element);
-    body.append(feed.element, fold('Adventure Lists', lists.element, 'lists'), log.element, fold('AI prompt', prompt.element, 'prompt'), settings.element);
+    body.append(feed.element, fold('Adventure Lists', lists.element, 'lists'), log.element);
+    extensionSettings.body.append(settings.element, prompt.element);
+    settings.element.open = true;
     // Refusals and an unavailable chat are answered where the player acts, above the field, not up in the feed.
     ask.element.prepend(status);
     panel.append(ask.element);
     const sections = [scene, feed, lists, log];
     function mount() {
-        const { composer, column } = mountPoints();
-        if (composer && launcher.parentElement !== composer)
-            composer.prepend(launcher);
-        const home = column ?? document.body;
+        const { composer } = mountPoints();
+        mountLauncher(composer, launcher);
+        extensionSettings.mount();
+        // A transformed or clipped host chat column must not become the fixed drawer's containing block.
+        const home = document.body;
         if (panel.parentElement !== home)
             home.append(panel);
         launcher.setAttribute('aria-expanded', String(!panel.hidden));
     }
-    function show() { panel.hidden = false; mount(); ask.settle(); close.focus(); }
+    function show() {
+        window.dispatchEvent(new CustomEvent('solo-play-panel-open', { detail: 'mythic-gme' }));
+        panel.hidden = false;
+        mount();
+        ask.settle();
+        close.focus();
+    }
     function hide() { panel.hidden = true; mount(); launcher.focus(); }
     function toggle() { if (panel.hidden)
         show();
     else
         hide(); }
     launcher.onclick = toggle;
+    window.addEventListener('solo-play-panel-open', event => {
+        if (event.detail !== 'mythic-gme' && !panel.hidden) {
+            panel.hidden = true;
+            mount();
+        }
+    });
     close.onclick = hide;
     elements.increase.onclick = () => actions.adjust(1);
     elements.decrease.onclick = () => actions.adjust(-1);

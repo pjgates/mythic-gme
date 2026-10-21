@@ -1,5 +1,5 @@
 /* Mythic GME surfaces inherit the host palette and never restyle host chat elements. */
-:is(#mythic-gme-drawer, #mythic-gme-launch) {
+:is(#mythic-gme-drawer, #mythic-gme-launch, #mythic-gme-settings) {
   --mg-accent: var(--customThemeColor, #5fa8f0);
   --mg-panel: var(--SmartThemeBlurTintColor, #0f141c);
   --mg-text: var(--SmartThemeBodyColor, #d6dce6);
@@ -23,32 +23,32 @@
 /* Explicit, not inherited: a <details> slots its content through a UA shadow slot that resets inherit to content-box. */
 #mythic-gme-drawer *, #mythic-gme-drawer *::before, #mythic-gme-drawer *::after { box-sizing: border-box; }
 #mythic-gme-drawer ::selection { background: var(--mg-selection); color: var(--mg-text); }
-#mythic-gme-drawer[hidden], #mythic-gme-drawer [hidden] { display: none !important; }
+#mythic-gme-drawer[hidden], :is(#mythic-gme-drawer, #mythic-gme-settings) [hidden] { display: none !important; }
 .mythic-gme-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 /* Every control is a 44px touch target; nothing depends on hover. */
-#mythic-gme-drawer button, #mythic-gme-launch {
+:is(#mythic-gme-drawer, #mythic-gme-settings) button, #mythic-gme-launch {
   color: var(--mg-text); background: var(--mg-raised); font: inherit; line-height: 1.2;
   border: 1px solid var(--mg-control-border); border-radius: 8px;
   min-width: 44px; min-height: 44px; padding: 8px 12px; cursor: pointer;
   touch-action: manipulation;
   transition: background-color 150ms var(--mg-ease), border-color 150ms var(--mg-ease), transform 150ms var(--mg-ease);
 }
-#mythic-gme-drawer button:active:not(:disabled), #mythic-gme-launch:active { background: var(--mg-pressed); transform: translateY(1px); }
-#mythic-gme-drawer button:disabled { cursor: default; color: var(--mg-muted); border-color: var(--mg-rule); background: transparent; }
-#mythic-gme-drawer :focus-visible, #mythic-gme-launch:focus-visible { outline: 2px solid var(--mg-accent); outline-offset: 2px; }
+:is(#mythic-gme-drawer, #mythic-gme-settings) button:active:not(:disabled), #mythic-gme-launch:active { background: var(--mg-pressed); transform: translateY(1px); }
+:is(#mythic-gme-drawer, #mythic-gme-settings) button:disabled { cursor: default; color: var(--mg-muted); border-color: var(--mg-rule); background: transparent; }
+:is(#mythic-gme-drawer, #mythic-gme-settings) :focus-visible, #mythic-gme-launch:focus-visible { outline: 2px solid var(--mg-accent); outline-offset: 2px; }
 /* Every text field (ask, notes, expected scene, list add, pack JSON) is one 44px host text_pole. */
-#mythic-gme-drawer .text_pole {
+:is(#mythic-gme-drawer, #mythic-gme-settings) .text_pole {
   flex: 1 1 160px; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 10px 12px; font: inherit; line-height: 1.4;
   color: var(--mg-text); background: var(--mg-raised); border: 1px solid var(--mg-control-border); border-radius: 8px;
   transition: border-color 150ms var(--mg-ease);
 }
-#mythic-gme-drawer .text_pole::placeholder { color: var(--mg-muted); opacity: 1; }
-#mythic-gme-drawer .text_pole:focus-visible { border-color: var(--mg-accent); outline-offset: 0; }
+:is(#mythic-gme-drawer, #mythic-gme-settings) .text_pole::placeholder { color: var(--mg-muted); opacity: 1; }
+:is(#mythic-gme-drawer, #mythic-gme-settings) .text_pole:focus-visible { border-color: var(--mg-accent); outline-offset: 0; }
 #mythic-gme-drawer textarea.text_pole { resize: vertical; }
 /* Verb chips: one pill grammar for everything the player taps to act on the field or a receipt. */
-#mythic-gme-drawer .mythic-gme-chip { border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
-#mythic-gme-drawer .mythic-gme-chip[aria-expanded="true"], #mythic-gme-drawer [aria-pressed="true"] {
+:is(#mythic-gme-drawer, #mythic-gme-settings) .mythic-gme-chip { border-radius: 999px; padding: 8px 14px; white-space: nowrap; }
+:is(#mythic-gme-drawer, #mythic-gme-settings) .mythic-gme-chip[aria-expanded="true"], #mythic-gme-drawer [aria-pressed="true"] {
   border-color: var(--mg-accent); color: var(--mg-accent); background: color-mix(in srgb, var(--mg-accent) 12%, var(--mg-panel));
 }
 
@@ -66,7 +66,7 @@
 }
 /* Wide viewports: a docked side panel. */
 @media (min-width: 1024px) {
-  #mythic-gme-drawer { top: 0; right: 0; bottom: 0; width: 360px; max-width: 40vw; border-right: 0; }
+  #mythic-gme-drawer { top: max(64px, env(safe-area-inset-top)); right: 0; bottom: 0; width: 360px; max-width: 40vw; border-right: 0; }
   @starting-style { #mythic-gme-drawer { transform: translateX(12px); } }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -240,3 +240,36 @@
 .mythic-gme-chip-group:not(:last-child) { padding-right: 8px; border-right: 1px solid var(--mg-rule); }
 .mythic-gme-chips .mythic-gme-chip { flex: 0 0 auto; scroll-snap-align: start; }
 .mythic-gme-chips [data-odds="fifty-fifty"] { border-color: var(--mg-accent); }
+
+/* Settings remain in the host Extensions menu; the same DOM nodes survive host remounts. */
+.solo-extension-settings { margin-block: 12px; border-block-end: 1px solid var(--SmartThemeBorderColor, #637083); }
+.solo-extension-settings > summary { min-height: 48px; padding: 8px; cursor: pointer; font-weight: 600; }
+.solo-settings-body { display: grid; gap: 16px; padding: 8px 12px 20px; min-width: 0; }
+.solo-settings-body > section { min-width: 0; }
+.solo-play-launchers { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+/* Both launchers use the same secondary-control treatment, including when installed alone. */
+#form_sheld .solo-play-launchers > :is(#minor-character-launch, #mythic-gme-launch) {
+  --solo-text: var(--SmartThemeBodyColor, #d6dce6);
+  --solo-panel: var(--SmartThemeBlurTintColor, #0f141c);
+  --solo-accent: var(--customThemeColor, #5fa8f0);
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  box-sizing: border-box; width: auto; min-width: 44px; height: 44px; min-height: 44px;
+  margin: 0; padding: 8px 12px; border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--solo-text) 45%, var(--solo-panel));
+  background: color-mix(in srgb, var(--solo-text) 6%, var(--solo-panel)); color: var(--solo-text);
+  font: 600 14px/1.2 system-ui, -apple-system, 'Segoe UI', sans-serif; letter-spacing: normal;
+  text-shadow: none; box-shadow: none; opacity: 1; cursor: pointer; touch-action: manipulation;
+}
+#form_sheld .solo-play-launchers > :is(#minor-character-launch, #mythic-gme-launch)[aria-expanded="true"] {
+  border-color: var(--solo-accent);
+  background: color-mix(in srgb, var(--solo-accent) 16%, var(--solo-panel));
+  color: color-mix(in srgb, var(--solo-accent) 70%, var(--solo-text));
+}
+@media (hover: hover) {
+  #form_sheld .solo-play-launchers > :is(#minor-character-launch, #mythic-gme-launch):hover { border-color: var(--solo-accent); }
+}
+#form_sheld .solo-play-launchers > :is(#minor-character-launch, #mythic-gme-launch):focus-visible {
+  outline: 2px solid var(--solo-accent); outline-offset: 2px;
+}
+
+#leftSendForm > .solo-play-launchers { width: auto; height: auto; opacity: 1; font: 14px/1.2 system-ui, sans-serif; }

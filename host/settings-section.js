@@ -7,7 +7,7 @@ const TEXTAREA_ID = 'mythic-gme-pack-json';
  */
 export function createSettingsSection(actions) {
     const details = element('details', 'mythic-gme-panel mythic-gme-settings');
-    const summary = element('summary', 'mythic-gme-settings-title', 'Settings');
+    const summary = element('summary', 'mythic-gme-settings-title', 'Table pack and Fate override');
     const packLine = element('p', 'mythic-gme-pack');
     packLine.dataset.pack = '';
     const form = element('form', 'mythic-gme-pack-import');

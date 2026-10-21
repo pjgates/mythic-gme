@@ -116,6 +116,7 @@ async function reopen() {
     await controller.open(await currentBinding());
 }
 drawer.mount();
+new MutationObserver(() => drawer.mount()).observe(document.body, { childList: true, subtree: true });
 render();
 if (adapter.chatIdentity.available)
     adapter.chatIdentity.onChange(() => { void reopen(); });
